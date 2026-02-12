@@ -7,10 +7,21 @@ on:
 
 jobs:
   terraform:
+    name: Terraform Check (${{ matrix.directory }})
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        directory:
+          - aws
+          - gcp
+
+    defaults:
+      run:
+        working-directory: ${{ matrix.directory }}
+
     steps:
-      - name: Checkout code
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: Setup Terraform
@@ -18,22 +29,11 @@ jobs:
         with:
           terraform_version: 1.6.6
 
-      - name: Terraform Format Check (AWS)
+      - name: Terraform Init
+        run: terraform init -backend=false
+
+      - name: Terraform Format Check
         run: terraform fmt -check -recursive
-        working-directory: ./aws
 
-      - name: Terraform Validate (AWS)
-        run: |
-          terraform init -backend=false
-          terraform validate
-        working-directory: ./aws
-
-      - name: Terraform Format Check (GCP)
-        run: terraform fmt -check -recursive
-        working-directory: ./gcp
-
-      - name: Terraform Validate (GCP)
-        run: |
-          terraform init -backend=false
-          terraform validate
-        working-directory: ./gcp
+      - name: Terraform Validate
+        run: terraform validate
