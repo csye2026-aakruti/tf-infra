@@ -115,10 +115,10 @@ resource "google_compute_firewall" "deny_all_ingress" {
 
 # Firewall rule for webapp instances
 resource "google_compute_firewall" "allow_webapp" {
-  name      = "${local.name_prefix}-allow-webapp"
-  network   = google_compute_network.vpc.name
-  direction = "INGRESS"
-  priority  = 900
+  name          = "${local.name_prefix}-allow-webapp"
+  network       = google_compute_network.vpc.name
+  direction     = "INGRESS"
+  priority      = 900
   target_tags   = ["webapp"]
   source_ranges = ["0.0.0.0/0"]
   allow {
