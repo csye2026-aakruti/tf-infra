@@ -112,3 +112,62 @@ resource "google_compute_firewall" "deny_all_ingress" {
     protocol = "all"
   }
 }
+
+# Firewall rule for webapp instances
+resource "google_compute_firewall" "allow_webapp" {
+  name      = "${local.name_prefix}-allow-webapp"
+  network   = google_compute_network.vpc.name
+  direction = "INGRESS"
+  priority  = 900
+  target_tags   = ["webapp"]
+  source_ranges = ["0.0.0.0/0"]
+  allow {
+    protocol = "tcp"
+    ports    = ["22", "80", "443", tostring(var.app_port)]
+  }
+}
+
+# Compute Engine instance
+resource "google_compute_instance" "app" {
+  name         = "${local.name_prefix}-app"
+  machine_type = "e2-medium"
+  zone         = var.zones[0]
+
+  tags = ["webapp", "public-web"]
+
+  boot_disk {
+    initialize_params {
+      image = "projects/${var.project_id}/global/images/${var.custom_image}"
+      size  = 25
+      type  = "pd-balanced"
+    }
+    auto_delete = true
+  }
+
+  network_interface {
+    network    = google_compute_network.vpc.id
+    subnetwork = google_compute_subnetwork.public[0].id
+    access_config {}
+  }
+
+  metadata_startup_script = <<-EOF
+    #!/bin/bash
+    cat > /opt/csye6225/.env << 'ENVFILE'
+    PORT=${var.app_port}
+    DB_HOST=localhost
+    DB_PORT=5432
+    DB_USER=webappuser
+    DB_PASSWORD=${var.db_password}
+    DB_NAME=webapp
+    JWT_SECRET=changeme
+    NODE_ENV=production
+    ENVFILE
+    chown csye6225:csye6225 /opt/csye6225/.env
+    sudo -u postgres psql -c "CREATE USER webappuser WITH PASSWORD '${var.db_password}';" || true
+    sudo -u postgres psql -c "CREATE DATABASE webapp OWNER webappuser;" || true
+    sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE webapp TO webappuser;" || true
+    systemctl restart webapp
+  EOF
+
+  deletion_protection = false
+}

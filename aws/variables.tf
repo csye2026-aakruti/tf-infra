@@ -93,3 +93,18 @@ variable "db_master_password" {
   type      = string
   sensitive = true
 }
+
+variable "custom_ami_id" {
+  type        = string
+  description = "Custom AMI ID built by Packer"
+}
+
+variable "db_host" {
+  type    = string
+  default = "localhost"
+}
+
+variable "app_port_env" {
+  type    = number
+  default = 3000
+}
