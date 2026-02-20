@@ -4,7 +4,7 @@ locals {
 
 # VPC (custom subnet mode)
 resource "google_compute_network" "vpc" {
-  name                    = "${local.name_prefix}-vpc"
+  name                         = "${local.name_prefix}-vpc"
   auto_create_subnetworks = false
   routing_mode            = "REGIONAL"
 }
