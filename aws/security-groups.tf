@@ -26,6 +26,7 @@ resource "aws_security_group" "lb_sg" {
 }
 
 # App SG - allow inbound app port ONLY from LB SG
+# App SG - allow inbound traffic for web application
 resource "aws_security_group" "app_sg" {
   name        = "${var.project}-${var.env}-${var.name_suffix}-app-sg"
   description = "Allow inbound app traffic from ALB only"
@@ -75,7 +76,6 @@ resource "aws_security_group" "app_sg" {
     Name = "${var.project}-${var.env}-${var.name_suffix}-app-sg"
   }
 }
-
 # DB SG - allow inbound Postgres ONLY from App SG
 resource "aws_security_group" "db_sg" {
   name        = "${var.project}-${var.env}-${var.name_suffix}-db-sg"

@@ -6,18 +6,21 @@ resource "aws_instance" "app" {
   vpc_security_group_ids      = [aws_security_group.app_sg.id]
   associate_public_ip_address = true
   disable_api_termination     = false
+  iam_instance_profile        = aws_iam_instance_profile.ec2_profile.name
 
   user_data = <<-EOF
     #!/bin/bash
     cat > /opt/csye6225/.env << 'ENVFILE'
-    PORT=${var.app_port_env}
-    DB_HOST=${var.db_host}
+    PORT=3000
+    DB_HOST=${aws_db_instance.postgres.address}
     DB_PORT=5432
-    DB_USER=${var.db_username}
-    DB_PASSWORD=${var.db_password}
-    DB_NAME=${var.db_name}
-    JWT_SECRET=changeme
+    DB_USER=csye6225
+    DB_PASSWORD=${var.db_master_password}
+    DB_NAME=csye6225
+    JWT_SECRET=${var.jwt_secret}
     NODE_ENV=production
+    S3_BUCKET_NAME=${aws_s3_bucket.app.bucket}
+    AWS_REGION=${var.aws_region}
     ENVFILE
     chown csye6225:csye6225 /opt/csye6225/.env
     systemctl restart webapp
@@ -32,4 +35,6 @@ resource "aws_instance" "app" {
   tags = {
     Name = "${var.project}-${var.env}-${var.name_suffix}-app"
   }
+
+  depends_on = [aws_db_instance.postgres]
 }
