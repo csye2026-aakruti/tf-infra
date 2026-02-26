@@ -26,17 +26,42 @@ resource "aws_security_group" "lb_sg" {
 }
 
 # App SG - allow inbound app port ONLY from LB SG
+# App SG - allow inbound traffic for web application
 resource "aws_security_group" "app_sg" {
   name        = "${var.project}-${var.env}-${var.name_suffix}-app-sg"
   description = "Allow inbound app traffic from ALB only"
   vpc_id      = aws_vpc.this.id
 
   ingress {
-    description     = "App port from ALB"
-    from_port       = var.app_port
-    to_port         = var.app_port
-    protocol        = "tcp"
-    security_groups = [aws_security_group.lb_sg.id]
+    description = "SSH from anywhere"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "HTTP from anywhere"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "HTTPS from anywhere"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "App port from anywhere"
+    from_port   = var.app_port
+    to_port     = var.app_port
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
@@ -50,25 +75,7 @@ resource "aws_security_group" "app_sg" {
   tags = {
     Name = "${var.project}-${var.env}-${var.name_suffix}-app-sg"
   }
-
-  ingress {
-    description = "SSH from my IP"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = [var.ssh_allowed_cidr]
-  }
-
-  ingress {
-    description = "App port from my IP (TEMP for testing)"
-    from_port   = var.app_port
-    to_port     = var.app_port
-    protocol    = "tcp"
-    cidr_blocks = [var.ssh_allowed_cidr]
-  }
-
 }
-
 # DB SG - allow inbound Postgres ONLY from App SG
 resource "aws_security_group" "db_sg" {
   name        = "${var.project}-${var.env}-${var.name_suffix}-db-sg"

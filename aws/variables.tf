@@ -93,3 +93,14 @@ variable "db_master_password" {
   type      = string
   sensitive = true
 }
+
+variable "jwt_secret" {
+  type        = string
+  description = "JWT secret for the web application"
+  sensitive   = true
+}
+
+variable "custom_ami_id" {
+  type        = string
+  description = "Custom AMI ID built by Packer"
+}

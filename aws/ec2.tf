@@ -1,27 +1,40 @@
-data "aws_ami" "ubuntu" {
-  most_recent = true
-  owners      = ["099720109477"] # Canonical
-
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-}
-
 resource "aws_instance" "app" {
-  ami                         = data.aws_ami.ubuntu.id
+  ami                         = var.custom_ami_id
   instance_type               = "t2.micro"
   key_name                    = aws_key_pair.main.key_name
   subnet_id                   = aws_subnet.public[0].id
   vpc_security_group_ids      = [aws_security_group.app_sg.id]
   associate_public_ip_address = true
+  disable_api_termination     = false
+  iam_instance_profile        = aws_iam_instance_profile.ec2_profile.name
+
+  user_data = <<-EOF
+    #!/bin/bash
+    cat > /opt/csye6225/.env << 'ENVFILE'
+    PORT=3000
+    DB_HOST=${aws_db_instance.postgres.address}
+    DB_PORT=5432
+    DB_USER=csye6225
+    DB_PASSWORD=${var.db_master_password}
+    DB_NAME=csye6225
+    JWT_SECRET=${var.jwt_secret}
+    NODE_ENV=production
+    S3_BUCKET_NAME=${aws_s3_bucket.app.bucket}
+    AWS_REGION=${var.aws_region}
+    ENVFILE
+    chown csye6225:csye6225 /opt/csye6225/.env
+    systemctl restart webapp
+  EOF
+
+  root_block_device {
+    volume_size           = 25
+    volume_type           = "gp2"
+    delete_on_termination = true
+  }
 
   tags = {
     Name = "${var.project}-${var.env}-${var.name_suffix}-app"
   }
+
+  depends_on = [aws_db_instance.postgres]
 }
