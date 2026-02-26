@@ -55,3 +55,14 @@ variable "ssh_allowed_cidrs" {
   description = "CIDRs allowed to SSH (use your public IPv4 /32). Keep as a list."
   default     = []
 }
+
+variable "custom_image" {
+  type        = string
+  description = "Custom GCP image name built by Packer"
+}
+
+variable "db_password" {
+  type        = string
+  sensitive   = true
+  description = "Database password"
+}
