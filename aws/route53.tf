@@ -10,5 +10,5 @@ resource "aws_route53_record" "app" {
   name    = "demo.aakrutighatole.me"
   type    = "A"
   ttl     = 300
-  records = [aws_instance.app.public_ip]
+  records = ["44.203.97.186"]
 }
