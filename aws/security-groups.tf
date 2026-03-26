@@ -1,13 +1,21 @@
-# Load Balancer SG - allow inbound HTTP from Internet
+# Load Balancer SG - allow inbound HTTP and HTTPS from Internet
 resource "aws_security_group" "lb_sg" {
   name        = "${var.project}-${var.env}-${var.name_suffix}-lb-sg"
-  description = "Allow inbound HTTP to ALB"
+  description = "Allow inbound HTTP/HTTPS to ALB"
   vpc_id      = aws_vpc.this.id
 
   ingress {
     description = "HTTP from Internet"
     from_port   = 80
     to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "HTTPS from Internet"
+    from_port   = 443
+    to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -25,11 +33,10 @@ resource "aws_security_group" "lb_sg" {
   }
 }
 
-# App SG - allow inbound app port ONLY from LB SG
-# App SG - allow inbound traffic for web application
+# App SG - allow SSH from anywhere, app port ONLY from LB SG
 resource "aws_security_group" "app_sg" {
   name        = "${var.project}-${var.env}-${var.name_suffix}-app-sg"
-  description = "Allow inbound app traffic from ALB only"
+  description = "Allow SSH from anywhere, app port from ALB only"
   vpc_id      = aws_vpc.this.id
 
   ingress {
@@ -41,27 +48,11 @@ resource "aws_security_group" "app_sg" {
   }
 
   ingress {
-    description = "HTTP from anywhere"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "HTTPS from anywhere"
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "App port from anywhere"
-    from_port   = var.app_port
-    to_port     = var.app_port
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    description     = "App port from LB only"
+    from_port       = var.app_port
+    to_port         = var.app_port
+    protocol        = "tcp"
+    security_groups = [aws_security_group.lb_sg.id]
   }
 
   egress {
@@ -76,6 +67,7 @@ resource "aws_security_group" "app_sg" {
     Name = "${var.project}-${var.env}-${var.name_suffix}-app-sg"
   }
 }
+
 # DB SG - allow inbound Postgres ONLY from App SG
 resource "aws_security_group" "db_sg" {
   name        = "${var.project}-${var.env}-${var.name_suffix}-db-sg"
