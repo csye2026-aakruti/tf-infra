@@ -3,7 +3,6 @@ resource "aws_lb" "app" {
   load_balancer_type = "application"
   security_groups    = [aws_security_group.lb_sg.id]
   subnets            = aws_subnet.public[*].id
-
   tags = {
     Name = "${var.project}-${var.env}-${var.name_suffix}-alb"
   }
@@ -23,12 +22,6 @@ resource "aws_lb_target_group" "app" {
     healthy_threshold   = 2
     unhealthy_threshold = 2
   }
-}
-
-resource "aws_lb_target_group_attachment" "app" {
-  target_group_arn = aws_lb_target_group.app.arn
-  target_id        = aws_instance.app.id
-  port             = var.app_port
 }
 
 resource "aws_lb_listener" "http" {
