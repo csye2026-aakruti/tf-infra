@@ -104,3 +104,14 @@ variable "custom_ami_id" {
   type        = string
   description = "Custom AMI ID built by Packer"
 }
+
+variable "mailgun_api_key" {
+  type        = string
+  description = "Mailgun API key for sending emails"
+  sensitive   = true
+}
+
+variable "mailgun_domain" {
+  type        = string
+  description = "Mailgun domain for sending emails"
+}
