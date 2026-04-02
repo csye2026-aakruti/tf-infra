@@ -49,3 +49,11 @@ output "alb_dns_name" {
 output "s3_bucket_name" {
   value = aws_s3_bucket.app.bucket
 }
+
+output "sns_topic_arn" {
+  value = aws_sns_topic.user_verification.arn
+}
+
+output "dynamodb_table_name" {
+  value = aws_dynamodb_table.email_tracking.name
+}

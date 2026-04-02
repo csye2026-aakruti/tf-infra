@@ -26,6 +26,7 @@ resource "aws_launch_template" "app" {
   NODE_ENV=production
   S3_BUCKET_NAME=${aws_s3_bucket.app.bucket}
   AWS_REGION=${var.aws_region}
+  SNS_TOPIC_ARN=${aws_sns_topic.user_verification.arn}
   ENVFILE
   chown csye6225:csye6225 /opt/csye6225/.env
   sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \

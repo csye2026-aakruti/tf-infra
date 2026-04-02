@@ -90,3 +90,83 @@ resource "aws_iam_role_policy_attachment" "cloudwatch_attachment" {
   role       = aws_iam_role.ec2_role.name
   policy_arn = aws_iam_policy.cloudwatch_policy.arn
 }
+
+# IAM role for Lambda function
+resource "aws_iam_role" "lambda_role" {
+  name = "${var.project}-${var.env}-${var.name_suffix}-lambda-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      }
+    ]
+  })
+
+  tags = {
+    Name = "${var.project}-${var.env}-${var.name_suffix}-lambda-role"
+  }
+}
+
+# IAM policy for Lambda - least privilege
+resource "aws_iam_policy" "lambda_policy" {
+  name        = "${var.project}-${var.env}-${var.name_suffix}-lambda-policy"
+  description = "Allow Lambda to write CloudWatch logs and access DynamoDB"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = "arn:aws:logs:*:*:*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "dynamodb:GetItem",
+          "dynamodb:PutItem"
+        ]
+        Resource = aws_dynamodb_table.email_tracking.arn
+      }
+    ]
+  })
+}
+
+# Attach policy to Lambda role
+resource "aws_iam_role_policy_attachment" "lambda_attachment" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.lambda_policy.arn
+}
+
+# IAM policy for EC2 to publish to SNS
+resource "aws_iam_policy" "sns_publish_policy" {
+  name        = "${var.project}-${var.env}-${var.name_suffix}-sns-publish-policy"
+  description = "Allow EC2 to publish messages to SNS topic"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = "sns:Publish"
+        Resource = aws_sns_topic.user_verification.arn
+      }
+    ]
+  })
+}
+
+# Attach SNS publish policy to EC2 role
+resource "aws_iam_role_policy_attachment" "sns_publish_attachment" {
+  role       = aws_iam_role.ec2_role.name
+  policy_arn = aws_iam_policy.sns_publish_policy.arn
+}
