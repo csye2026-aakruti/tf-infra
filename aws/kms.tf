@@ -4,6 +4,35 @@ resource "aws_kms_key" "ec2" {
   enable_key_rotation     = true
   rotation_period_in_days = 90
 
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::631259293293:root"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow EC2 to use the key"
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+        Action = [
+          "kms:Decrypt",
+          "kms:GenerateDataKey*",
+          "kms:CreateGrant",
+          "kms:DescribeKey"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+
   tags = {
     Name = "${var.project}-${var.env}-${var.name_suffix}-ec2-key"
   }
