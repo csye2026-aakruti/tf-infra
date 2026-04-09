@@ -13,8 +13,8 @@ resource "aws_lambda_function" "email_verification" {
       DYNAMODB_TABLE  = aws_dynamodb_table.email_tracking.name
       MAILGUN_API_KEY = var.mailgun_api_key
       MAILGUN_DOMAIN  = var.mailgun_domain
-      VERIFY_BASE_URL  = "http://${aws_route53_record.app.name}"    
-      }
+      VERIFY_BASE_URL = "http://${aws_route53_record.app.name}"
+    }
   }
 
   tags = {
