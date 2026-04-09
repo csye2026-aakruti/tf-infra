@@ -39,6 +39,8 @@ resource "aws_db_instance" "postgres" {
   publicly_accessible = false
   skip_final_snapshot = true
   multi_az            = false
+  storage_encrypted   = true
+  kms_key_id          = aws_kms_key.rds.arn
 
   tags = {
     Name = "${var.project}-${var.env}-${var.name_suffix}-postgres"

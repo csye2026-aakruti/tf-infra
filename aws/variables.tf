@@ -115,3 +115,8 @@ variable "mailgun_domain" {
   type        = string
   description = "Mailgun domain for sending emails"
 }
+
+variable "acm_certificate_arn" {
+  type        = string
+  description = "ACM certificate ARN for HTTPS listener"
+}

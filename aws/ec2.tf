@@ -15,12 +15,18 @@ resource "aws_launch_template" "app" {
 
   user_data = base64encode(<<-USERDATA
   #!/bin/bash
+  DB_PASSWORD=$(aws secretsmanager get-secret-value \
+    --secret-id ${aws_secretsmanager_secret.db_password.name} \
+    --region ${var.aws_region} \
+    --query SecretString \
+    --output text | python3 -c "import sys,json; print(json.load(sys.stdin)['password'])")
+
   cat > /opt/csye6225/.env << ENVFILE
   PORT=3000
   DB_HOST=${aws_db_instance.postgres.address}
   DB_PORT=5432
   DB_USER=${aws_db_instance.postgres.username}
-  DB_PASSWORD=${var.db_master_password}
+  DB_PASSWORD=$DB_PASSWORD
   DB_NAME=${aws_db_instance.postgres.db_name}
   JWT_SECRET=${var.jwt_secret}
   NODE_ENV=production
@@ -44,6 +50,8 @@ resource "aws_launch_template" "app" {
       volume_size           = 25
       volume_type           = "gp2"
       delete_on_termination = true
+      encrypted             = true
+      kms_key_id            = aws_kms_key.ec2.arn
     }
   }
 
