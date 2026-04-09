@@ -15,10 +15,6 @@ resource "aws_launch_template" "app" {
 
   user_data = base64encode(<<-USERDATA
   #!/bin/bash
-  # Install AWS CLI if not present
-  if ! command -v aws &> /dev/null; then
-    apt-get install -y awscli
-  fi
   DB_PASSWORD=$(aws secretsmanager get-secret-value \
     --secret-id ${aws_secretsmanager_secret.db_password.name} \
     --region ${var.aws_region} \

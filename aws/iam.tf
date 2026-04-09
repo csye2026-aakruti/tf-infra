@@ -170,3 +170,38 @@ resource "aws_iam_role_policy_attachment" "sns_publish_attachment" {
   role       = aws_iam_role.ec2_role.name
   policy_arn = aws_iam_policy.sns_publish_policy.arn
 }
+
+resource "aws_iam_policy" "secrets_policy" {
+  name        = "${var.project}-${var.env}-${var.name_suffix}-secrets-policy"
+  description = "Allow EC2 to read secrets from Secrets Manager"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:DescribeSecret"
+        ]
+        Resource = [
+          aws_secretsmanager_secret.db_password.arn,
+          aws_secretsmanager_secret.mailgun_credentials.arn
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "kms:Decrypt",
+          "kms:GenerateDataKey"
+        ]
+        Resource = aws_kms_key.secrets.arn
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "secrets_attachment" {
+  role       = aws_iam_role.ec2_role.name
+  policy_arn = aws_iam_policy.secrets_policy.arn
+}
